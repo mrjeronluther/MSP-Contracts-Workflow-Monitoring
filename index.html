@@ -1,0 +1,1934 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+      /* ==========================================================================
+   0. CSS RESET & BEST PRACTICES
+   ========================================================================== */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      /* ==========================================================================
+   1. VARIABLES & THEMES
+   ========================================================================== */
+
+      :root {
+        /* --- Default Light Mode (Morning) --- */
+        --primary-color: #4f46e5;
+        /* Indigo */
+        --primary-hover-color: #4338ca;
+        --background-color: #f9fafb;
+        /* Lighter Gray */
+        --sidebar-background-color: rgba(255, 255, 255, 0.8);
+        --card-background-color: #ffffff;
+        --text-color: #111827;
+        /* Darker Gray for better contrast */
+        --text-light-color: #6b7280;
+        --border-color: #e5e7eb;
+        --error-color: #ef4444;
+        /* Brighter Red */
+        --font-family: "Inter", sans-serif;
+        --border-radius: 0.75rem;
+        /* 12px */
+        --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+        --transition-speed: 0.3s;
+        --backdrop-blur: 12px;
+      }
+
+      :root[data-theme="afternoon"] {
+        --primary-color: #f97316;
+        /* Brighter Orange */
+        --primary-hover-color: #ea580c;
+        --background-color: #fff7ed;
+        /* Light Orange */
+        --card-background-color: #ffffff;
+        --border-color: #fed7aa;
+        /* Pale Orange */
+      }
+
+      :root[data-theme="dark"] {
+        --primary-color: #818cf8;
+        /* Lighter Indigo for dark mode */
+        --primary-hover-color: #6366f1;
+        --background-color: #111827;
+        /* Dark Gray */
+        --sidebar-background-color: rgba(31, 41, 55, 0.8);
+        --card-background-color: #1f2937;
+        --text-color: #f9fafb;
+        /* Light Gray */
+        --text-light-color: #9ca3af;
+        --border-color: #374151;
+        --error-color: #f87171;
+        /* Light Red */
+        --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+      }
+
+      /* ==========================================================================
+   2. BASE & TYPOGRAPHY STYLES (Mobile-First & Fluid)
+   ========================================================================== */
+
+      html {
+        scroll-behavior: smooth;
+        font-size: 100%;
+        /* Base font size for mobile (usually 16px) */
+        height: 100%;
+        /* UPDATED: Full height context */
+      }
+
+      body {
+        font-family: var(--font-family);
+        background-color: var(--background-color);
+        color: var(--text-color);
+        margin: 0;
+        line-height: 1.6;
+        font-size: 1rem;
+        /* Set base body font size to 1rem (16px) */
+        transition: background-color var(--transition-speed), color var(--transition-speed);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        height: 100dvh;
+        /* UPDATED: Full viewport height, prevents main scroll */
+        overflow: hidden;
+        /* UPDATED: Prevents main scroll */
+      }
+
+      body.sidebar-open {
+        overflow: hidden;
+      }
+
+      /* ==========================================================================
+   3. LAYOUT CONTAINERS (UPDATED FOR FULL-PAGE LAYOUT)
+   ========================================================================== */
+
+      #app {
+        height: 100%;
+        /* UPDATED: Ensure Vue wrapper takes full height */
+      }
+
+      #app-container {
+        display: grid;
+        grid-template-columns: 1fr;
+        height: 100dvh;
+        /* UPDATED: Use full viewport height */
+      }
+
+      #main-content {
+        padding: 1.5rem;
+        /* UPDATED: Increased padding for more breathing room */
+        width: 100%;
+        box-sizing: border-box;
+        /* --- NEW: Flexbox properties for full-page layout --- */
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        /* NEW: Consistent spacing between elements */
+        overflow: hidden;
+        /* NEW: Prevent this container from scrolling */
+      }
+
+      /* ==========================================================================
+   4. SIDEBAR STYLES (Mobile-First)
+   ========================================================================== */
+
+      #sidebar {
+        background-color: var(--sidebar-background-color);
+        backdrop-filter: blur(var(--backdrop-blur));
+        border-right: 1px solid var(--border-color);
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        height: 100dvh;
+        left: 0;
+        overflow-y: auto;
+        padding: 1rem 0.5rem;
+        position: fixed;
+        top: 0;
+        transform: translateX(-100%);
+        transition: transform var(--transition-speed) ease-in-out, background-color var(--transition-speed);
+        width: 280px;
+        max-width: 90%;
+        z-index: 2000;
+      }
+
+      body.sidebar-open #sidebar {
+        transform: translateX(0);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+      }
+
+      .sidebar-overlay {
+        background-color: rgba(17, 24, 39, 0.5);
+        height: 100%;
+        left: 0;
+        opacity: 0;
+        position: fixed;
+        top: 0;
+        transition: opacity var(--transition-speed) ease, visibility var(--transition-speed) ease;
+        visibility: hidden;
+        width: 100%;
+        z-index: 1999;
+      }
+
+      body.sidebar-open .sidebar-overlay {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      .sidebar-header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+        padding: 0 1rem;
+      }
+
+      .header-logo img {
+        border-radius: 50%;
+        max-width: 160px;
+      }
+
+      .sidebar-title {
+        font-size: 1.125rem;
+        font-weight: 700;
+        text-align: center;
+      }
+
+      .filters-nav {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        gap: 0.25rem;
+        padding: 0 0.9rem;
+      }
+
+      .filters-nav button {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        background: transparent;
+        border: none;
+        border-radius: var(--border-radius);
+        color: var(--text-light-color);
+        cursor: pointer;
+        font-size: 0.875rem;
+        font-weight: 500;
+        gap: 0.75rem;
+        padding: 0.6rem 0.75rem;
+        text-align: center;
+        transition: all 0.2s ease-in-out;
+      }
+
+      .filters-nav button:not(.active):hover {
+        background-color: var(--background-color);
+        color: var(--text-color);
+      }
+
+      .filters-nav button.active {
+        background-color: color-mix(in srgb, var(--primary-color) 10%, transparent);
+        color: var(--primary-color);
+        font-weight: 600;
+      }
+
+      .filters-nav svg {
+        flex-shrink: 0;
+        width: 1.25rem;
+        height: 1.25rem;
+      }
+
+      .button-text {
+        flex-grow: 1;
+      }
+
+      .filter-count {
+        background-color: var(--border-color);
+        border-radius: 999px;
+        color: var(--text-light-color);
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-left: auto;
+        padding: 2px 8px;
+        transition: all 0.2s ease-in-out;
+      }
+
+      .filters-nav button.active .filter-count {
+        background-color: var(--primary-color);
+        color: white;
+      }
+
+      .sidebar-heading {
+        padding: 0.5rem 0.75rem;
+      }
+
+      .sidebar-heading hr {
+        border: none;
+        border-top: 1px solid var(--border-color);
+        margin: 0.75rem 0;
+      }
+
+      .sidebar-heading span {
+        color: var(--text-light-color);
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
+      .sidebar-footer {
+        border-top: 1px solid var(--border-color);
+        margin-top: auto;
+        padding: 1rem;
+      }
+
+      .logout-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        background: transparent;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        color: var(--text-light-color);
+        cursor: pointer;
+        font-weight: 500;
+        gap: 0.5rem;
+        padding: 0.6rem;
+        transition: all 0.2s;
+      }
+
+      .logout-button:hover {
+        background-color: var(--background-color);
+        color: var(--text-color);
+        border-color: color-mix(in srgb, var(--text-color) 50%, transparent);
+      }
+
+      /* ==========================================================================
+   5. MAIN CONTENT STYLES (UPDATED FOR FULL-PAGE LAYOUT)
+   ========================================================================== */
+
+      .app-header {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        grid-template-rows: auto auto;
+        align-items: center;
+        gap: 0.5rem 1rem;
+        background-color: var(--card-background-color);
+        backdrop-filter: blur(var(--backdrop-blur));
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        padding: 1rem;
+        position: sticky;
+        top: 1.5rem;
+        /* UPDATED: Matches new padding */
+        z-index: 100;
+        margin-bottom: 5px;
+        /* UPDATED: Replaced by parent gap */
+        flex-shrink: 0;
+        /* NEW: Prevent header from shrinking */
+      }
+
+      .hamburger-menu {
+        grid-column: 1 / 2;
+        grid-row: 1 / 2;
+        background: none;
+        border: none;
+        color: var(--text-color);
+        cursor: pointer;
+        padding: 0.25rem;
+      }
+
+      .hamburger-menu svg {
+        width: 1.75rem;
+        height: 1.75rem;
+      }
+
+      .theme-toggle-button {
+        grid-column: 3 / 4;
+        grid-row: 1 / 2;
+        background: none;
+        border: none;
+        border-radius: 50%;
+        color: var(--text-color);
+        cursor: pointer;
+        padding: 0.25rem;
+        transition: background-color 0.2s;
+      }
+
+      .theme-toggle-button:hover {
+        background-color: var(--background-color);
+      }
+
+      .theme-toggle-button svg {
+        width: 1.5rem;
+        height: 1.5rem;
+      }
+
+      .main-header {
+        grid-column: 1 / -1;
+        grid-row: 2 / 3;
+        font-size: clamp(1.2rem, 4vw, 1.5rem);
+        font-weight: 700;
+        line-height: 1.3;
+        text-align: center;
+        margin: 0;
+      }
+
+      .user-profile {
+        grid-column: 1 / -1;
+        grid-row: 3 / 4;
+        text-align: center;
+      }
+
+      .user-profile .greeting {
+        color: var(--text-light-color);
+        font-size: 0.8rem;
+      }
+
+      .user-profile .username {
+        font-size: 0.9rem;
+        font-weight: 600;
+      }
+
+      .search-container {
+        position: relative;
+        margin-bottom: 0;
+        /* UPDATED: Replaced by parent gap */
+        flex-shrink: 0;
+        /* NEW: Prevent search from shrinking */
+      }
+
+      .search-icon {
+        color: var(--text-light-color);
+        height: 1.25rem;
+        left: 1rem;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 1.25rem;
+        z-index: 1;
+      }
+
+      #search-term {
+        background-color: var(--card-background-color);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        box-sizing: border-box;
+        color: var(--text-color);
+        font-size: 1rem;
+        padding: 0.875rem 1rem 0.875rem 3.25rem;
+        transition: all var(--transition-speed);
+        width: 100%;
+      }
+
+      #search-term:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 25%, transparent);
+        outline: none;
+      }
+
+      /* --- UPDATED: .content-card is now a flex container for the table and pagination --- */
+      .content-card {
+        background: var(--card-background-color);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        /* --- NEW: Flex properties to make children fill space --- */
+        flex-grow: 1;
+        /* CRITICAL: Allows this card to take all available vertical space */
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        /* CRITICAL: Prevents content from overflowing the card */
+        min-height: 0;
+        /* CRITICAL: Fix for flexbox overflow bug */
+      }
+
+      .table-container {
+        overflow-y: auto;
+        /* UPDATED: Only vertical scroll needed */
+        width: 100%;
+        /* --- NEW: Flex property to fill space within the card --- */
+        flex-grow: 1;
+        /* CRITICAL: Makes the table area expand */
+      }
+
+      table {
+        border-collapse: collapse;
+        min-width: 700px;
+        width: 100%;
+      }
+
+      thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background-color: var(--card-background-color);
+        /* CRITICAL FIX: Ensures sticky header has a solid background */
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        padding: 0.75rem 1.5rem;
+        /* UPDATED: Increased padding */
+        text-align: center;
+        text-transform: uppercase;
+        white-space: nowrap;
+        transition: background-color var(--transition-speed);
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      td {
+        border-bottom: 1px solid var(--border-color);
+        padding: 1rem 1.5rem;
+        /* UPDATED: Increased padding for more row height */
+        text-align: center;
+        font-size: 0.9rem;
+        color: var(--text-color);
+      }
+
+      tbody tr:hover {
+        background-color: var(--background-color);
+      }
+
+      tbody tr:last-child td {
+        border-bottom: none;
+      }
+
+      td a {
+        color: var(--primary-color);
+        font-weight: 500;
+        text-decoration: none;
+        transition: color 0.2s;
+      }
+
+      td a:hover {
+        color: var(--primary-hover-color);
+        text-decoration: underline;
+      }
+
+      .upload-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        margin: 0 auto;
+        background-color: var(--primary-color);
+        border: none;
+        border-radius: 50%;
+        color: white;
+        cursor: pointer;
+        padding: 0;
+        transition: all 0.2s;
+      }
+
+      .upload-btn:hover {
+        background-color: var(--primary-hover-color);
+        transform: scale(1.1);
+      }
+
+      .pagination {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        font-size: 0.875rem;
+        gap: 1rem;
+        padding: 1rem;
+        border-top: 1px solid var(--border-color);
+        flex-shrink: 0;
+        /* NEW: Prevents pagination from shrinking */
+      }
+
+      .pagination-controls {
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      .pagination-controls button {
+        display: inline-flex;
+        align-items: center;
+        background-color: transparent;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        color: var(--text-color);
+        cursor: pointer;
+        font-weight: 500;
+        gap: 0.25rem;
+        padding: 0.5rem 1rem;
+        transition: all 0.2s;
+      }
+
+      .pagination-controls button:hover:not(:disabled) {
+        background-color: var(--background-color);
+        border-color: color-mix(in srgb, var(--text-color) 50%, transparent);
+      }
+
+      .pagination-controls button:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+      }
+
+      /* ==========================================================================
+   6. LOGIN PAGE STYLES
+   ========================================================================== */
+      #login-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        padding: 1rem;
+        box-sizing: border-box;
+      }
+
+      .login-card {
+        background-color: var(--card-background-color);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        max-width: 420px;
+        padding: 2.5rem;
+        transition: background-color var(--transition-speed);
+        width: 100%;
+      }
+
+      .login-header {
+        text-align: center;
+        margin-bottom: 2rem;
+      }
+
+      .login-header img {
+        width: 100%;
+        max-width: 280px;
+        /* Reduced max-width for better balance */
+        height: auto;
+        border-radius: 50%;
+        margin-bottom: 1.5rem;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .login-header h1 {
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin: 0;
+      }
+
+      .login-form .form-group {
+        margin-bottom: 1.5rem;
+      }
+
+      .login-form label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+      }
+
+      .login-form input {
+        background-color: var(--card-background-color);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        box-sizing: border-box;
+        color: var(--text-color);
+        padding: 0.75rem 1rem;
+        transition: all var(--transition-speed);
+        width: 100%;
+        font-size: 1rem;
+      }
+
+      .login-form input:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 25%, transparent);
+        outline: none;
+      }
+
+      .login-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        background-color: var(--primary-color);
+        border: none;
+        border-radius: var(--border-radius);
+        color: white;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 600;
+        gap: 0.5rem;
+        padding: 0.875rem;
+        transition: all 0.2s;
+      }
+
+      .login-button:hover:not(:disabled) {
+        background-color: var(--primary-hover-color);
+        transform: translateY(-2px);
+      }
+
+      .login-button:disabled {
+        background-color: #9ca3af;
+        cursor: not-allowed;
+      }
+
+      .login-error {
+        color: var(--error-color);
+        font-size: 0.875rem;
+        margin-top: 1.5rem;
+        text-align: center;
+      }
+
+      /* ==========================================================================
+   7. COMPONENTS (MODALS, TOASTS, LOADERS)
+   ========================================================================== */
+      /* This container is responsible for the space from the screen edges */
+      .modal-overlay {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        width: 100%;
+        left: 0;
+        top: 0;
+        padding: 1rem;
+        /* This padding now correctly creates space on ALL sides */
+        position: fixed;
+        background-color: rgba(17, 24, 39, 0.6);
+        backdrop-filter: blur(8px);
+        z-index: 3000;
+      }
+
+      /* This card just sits inside the padded overlay */
+      .modal-card {
+        background-color: var(--card-background-color);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        max-width: 400px;
+        width: 100%;
+        padding: 2rem 1.5rem;
+        /* Internal padding */
+        text-align: center;
+      }
+
+      .modal-card h4 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-top: 0;
+      }
+
+      .modal-card p {
+        color: var(--text-light-color);
+        margin: 0.5rem 0 2rem 0;
+      }
+
+      .modal-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        justify-content: center;
+      }
+
+      .modal-button {
+        width: 100%;
+        border: none;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        font-weight: 600;
+        padding: 0.75rem 1.25rem;
+        transition: all 0.2s;
+      }
+
+      .modal-button.cancel {
+        background-color: transparent;
+        border: 1px solid var(--border-color);
+        color: var(--text-color);
+      }
+
+      .modal-button.cancel:hover {
+        background-color: var(--background-color);
+      }
+
+      .modal-button.confirm {
+        background-color: var(--error-color);
+        color: white;
+      }
+
+      .modal-button.confirm:hover {
+        opacity: 0.9;
+      }
+
+      .app-toast-container {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        z-index: 9999;
+      }
+
+      .app-toast {
+        animation: app-toast-in 0.5s forwards;
+        background-color: #1f2937;
+        border-radius: var(--border-radius);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        color: #fff;
+        font-size: 0.9rem;
+        font-weight: 500;
+        opacity: 0;
+        padding: 12px 20px;
+        transform: translateY(20px);
+      }
+
+      .app-toast.success {
+        background-color: #16a34a;
+      }
+
+      .app-toast.error {
+        background-color: #dc2626;
+      }
+
+      .app-toast.info {
+        background-color: #2563eb;
+      }
+
+      .loader-container,
+      .message {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        flex-grow: 1;
+        /* NEW: Make sure loader/message fills space */
+        color: var(--text-light-color);
+        font-size: 1rem;
+        font-weight: 500;
+        padding: 3rem 1rem;
+        text-align: center;
+      }
+
+      .loader {
+        animation: spin 1s linear infinite;
+        border: 4px solid var(--border-color);
+        border-radius: 50%;
+        border-top: 4px solid var(--primary-color);
+        height: 40px;
+        width: 40px;
+        margin-bottom: 1rem;
+      }
+
+      /* ==========================================================================
+   8. UTILITIES & ANIMATIONS
+   ========================================================================== */
+      ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background-color: var(--border-color);
+        border-radius: 10px;
+      }
+
+      .table-container::-webkit-scrollbar-thumb {
+        background-color: var(--primary-color);
+        border-radius: 10px;
+        border: 3px solid var(--card-background-color);
+      }
+
+      .table-container::-webkit-scrollbar-thumb:hover {
+        background-color: var(--primary-hover-color);
+      }
+
+      .direction-note {
+        animation: glow-animation 2.5s infinite ease-in-out;
+        background-color: color-mix(in srgb, var(--primary-color) 10%, transparent);
+        border: 1px solid color-mix(in srgb, var(--primary-color) 20%, transparent);
+        border-radius: var(--border-radius);
+        color: var(--text-color);
+        font-size: 0.85rem;
+        padding: 0.75rem 1rem;
+        text-align: left;
+        flex-shrink: 0;
+        /* NEW: prevent from shrinking */
+      }
+
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      @keyframes app-toast-in {
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes glow-animation {
+        0% {
+          box-shadow: 0 0 3px color-mix(in srgb, var(--primary-color) 15%, transparent);
+        }
+
+        50% {
+          box-shadow: 0 0 12px color-mix(in srgb, var(--primary-color) 30%, transparent);
+        }
+
+        100% {
+          box-shadow: 0 0 3px color-mix(in srgb, var(--primary-color) 15%, transparent);
+        }
+      }
+
+      /* ==========================================================================
+   9. RESPONSIVE MEDIA QUERIES (Progressive Enhancement)
+   ========================================================================== */
+
+      /* --- TABLET (768px and up) --- */
+      @media (min-width: 768px) {
+        html {
+          font-size: 90%;
+        }
+
+        .app-header {
+          grid-template-columns: auto 1fr auto auto;
+          grid-template-rows: 1fr;
+          gap: 1rem;
+          padding: 0.5rem 1.5rem;
+        }
+
+        .hamburger-menu {
+          grid-column: 1 / 2;
+        }
+
+        .main-header {
+          grid-column: 2 / 3;
+          text-align: center;
+          grid-row: 1 / 2;
+        }
+
+        .user-profile {
+          grid-column: 3 / 4;
+          grid-row: 1 / 2;
+          text-align: right;
+          width: auto;
+        }
+
+        .theme-toggle-button {
+          grid-column: 4 / 5;
+        }
+
+        .pagination {
+          flex-direction: row;
+          justify-content: space-between;
+          padding: 1rem 1.5rem;
+        }
+
+        .modal-card {
+          padding: 2.5rem;
+        }
+
+        .modal-actions {
+          flex-direction: row;
+        }
+
+        .modal-button {
+          width: auto;
+        }
+      }
+
+      /* --- DESKTOP (1024px and up) --- */
+      @media (min-width: 1024px) {
+        #app-container {
+          grid-template-columns: 280px 1fr;
+        }
+
+        #sidebar {
+          position: sticky;
+          top: 0;
+          transform: none;
+          box-shadow: none;
+        }
+
+        .hamburger-menu,
+        .sidebar-overlay {
+          display: none;
+        }
+
+        body.sidebar-open {
+          overflow: auto;
+        }
+
+        .app-header {
+          padding: 0.75rem 1.5rem;
+          top: 1.5rem;
+          /* Matches padding */
+        }
+
+        #main-content {
+          padding: 1.5rem;
+          /* Consistent padding */
+        }
+      }
+
+      /* ==========================================================================
+   Add this new section to your CSS
+   ========================================================================== */
+
+      /* --- DYNAMIC COLUMN STYLING --- */
+
+      /* For shorter ID columns, give them a minimum width */
+      .col-ref,
+      .col-noa-ref,
+      .col-msp-ref {
+        min-width: 40px;
+      }
+
+      /* For the long "Township" column, give it more space and allow text to wrap */
+      .col-township {
+        width: 120px;
+        /* Set a specific, larger width */
+      }
+
+      /* For status columns, a smaller width is fine */
+      .col-ball-with {
+        width: 250px;
+      }
+
+      /* For numeric or short centered data */
+      .col-days-pending {
+        width: 120px;
+        text-align: center;
+        /* Center the text */
+      }
+
+      /* For date columns */
+      .col-date {
+        width: 160px;
+        white-space: nowrap;
+        /* Prevent dates from wrapping */
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="app">
+      <!-- Logout Modal -->
+      <div v-if="showLogoutModal" class="modal-overlay">
+        <div class="modal-card">
+          <h4>Confirm Logout</h4>
+          <p>Are you sure you want to log out?</p>
+          <div class="modal-actions">
+            <button @click="cancelLogout" class="modal-button cancel">Cancel</button>
+            <button @click="confirmLogout" class="modal-button confirm">Logout</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="toast-container" class="app-toast-container"></div>
+      <input type="file" id="file-uploader" @change="handleFileUpload" accept=".pdf" style="display: none;" />
+
+      <!-- LOGIN VIEW -->
+      <div v-if="!isLoggedIn" id="login-container">
+        <div class="login-card">
+          <header class="login-header">
+            <img src="https://raw.githubusercontent.com/mrjeronluther/Memo-Routing-Landing-Page/main/WhatsApp%20Image%202025-06-05%20at%2015.44.42_3fc69535.jpg" alt="Company Logo" />
+            <h1>MSP Contracts Workflow Monitoring</h1>
+          </header>
+          <form @submit.prevent="handleLogin" class="login-form">
+            <div class="form-group">
+              <label for="username">Email Address</label>
+              <input type="text" id="username" v-model.trim="loginUsername" required />
+            </div>
+            <div class="form-group">
+              <label for="password">Password</label>
+              <input type="password" id="password" v-model="loginPassword" required />
+            </div>
+            <button type="submit" class="login-button" :disabled="isLoggingIn">
+              <div v-if="isLoggingIn" class="loader" style="width: 20px; height: 20px; border-width: 2px; margin-bottom: 0;"></div>
+              <span v-else>Login</span>
+            </button>
+            <p v-if="loginError" class="login-error">{{ loginError }}</p>
+          </form>
+        </div>
+      </div>
+
+      <!-- MAIN APP VIEW -->
+      <div v-if="isLoggedIn" id="app-container">
+        <div class="sidebar-overlay" @click="toggleSidebar"></div>
+        <aside id="sidebar">
+          <header class="sidebar-header">
+            <div class="header-logo">
+              <img src="https://raw.githubusercontent.com/mrjeronluther/Memo-Routing-Landing-Page/main/WhatsApp%20Image%202025-06-05%20at%2015.44.42_3fc69535.jpg" alt="Company Logo" />
+            </div>
+            <h2 class="sidebar-title">Dashboard</h2>
+          </header>
+
+          <nav class="filters-nav">
+            <button @click="handleFilterClick(setDefaultView)" :class="{ active: isDefaultFilterActive }" title="All Contracts">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19,3H5A2,2,0,0,0,3,5V19a2,2,0,0,0,2,2H19a2,2,0,0,0,2-2V5A2,2,0,0,0,19,3ZM5,19V10H19V19H5ZM19,8H5V5H19Z" />
+              </svg>
+              <span class="button-text">All Contracts</span>
+              <span class="filter-count">{{ allContractsCount }}</span>
+            </button>
+            <button @click="handleFilterClick(toggleRbgTkFilter)" :class="{ active: isRbgTkFilterActive }" title="RBG-TK">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19,21H5a2,2,0,0,1-2-2V5A2,2,0,0,1,5,3H19a2,2,0,0,1,2,2V19A2,2,0,0,1,19,21ZM5,5V19H19V5ZM15,11H9v2h6Zm0,4H9v2h6ZM15,7H9V9h6Z" />
+              </svg>
+              <span class="button-text">RBG-TK</span>
+              <span class="filter-count">{{ rbgTkCount }}</span>
+            </button>
+
+            <div class="sidebar-heading">
+              <hr />
+              <span>Ball with:</span>
+            </div>
+
+            <button @click="handleFilterClick(toggleNoDraftFilter)" :class="{ active: isNoDraftFilterActive }" title="COG-SCSU - NO DRAFT">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M14,2H6A2,2,0,0,0,4,4V20a2,2,0,0,0,2,2H18a2,2,0,0,0,2-2V8Zm2,16H8V16h8Zm0-4H8V12h8ZM13,9V3.5L18.5,9Z" />
+              </svg>
+              <span class="button-text">COG-SCSU - NO DRAFT</span>
+              <span class="filter-count">{{ noDraftCount }}</span>
+            </button>
+            <button @click="handleFilterClick(toggleWithDraftFilter)" :class="{ active: isWithDraftFilterActive }" title="COG-SCSU - WITH DRAFT">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M13,2H6A2,2,0,0,0,4,4V20a2,2,0,0,0,2,2h9l5-5V4A2,2,0,0,0,18,2ZM12,18H8V16h4Zm4-4H8V12h8Zm0-4H8V8h8Z" />
+              </svg>
+              <span class="button-text">COG-SCSU - WITH DRAFT</span>
+              <span class="filter-count">{{ withDraftCount }}</span>
+            </button>
+            <button @click="handleFilterClick(togglePropertyFilter)" :class="{ active: isPropertyFilterActive }" title="PROPERTY">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12,2,2,7V21H22V7ZM14,19H10V16h4Zm6-7H4V8.3l8-3.7,8,3.7Z" />
+              </svg>
+              <span class="button-text">PROPERTY</span>
+              <span class="filter-count">{{ propertyCount }}</span>
+            </button>
+            <button @click="handleFilterClick(toggleMoisdFilter)" :class="{ active: isMoisdFilterActive }" title="MOSD">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M4,20h16a1,1,0,0,0,1-1V5a1,1,0,0,0-1-1H4A1,1,0,0,0,3,5V19A1,1,0,0,0,4,20ZM9,14a1,1,0,0,1,0,2H7a1,1,0,0,1,0-2Zm0-4a1,1,0,0,1,0,2H7a1,1,0,0,1,0-2Zm4,4a1,1,0,0,1,0,2H11a1,1,0,0,1,0-2Zm0-4a1,1,0,0,1,0,2H11a1,1,0,0,1,0-2Zm4,4a1,1,0,0,1,0,2H15a1,1,0,0,1,0-2Zm0-4a1,1,0,0,1,0,2H15a1,1,0,0,1,0-2Z"
+                />
+              </svg>
+              <span class="button-text">MOSD - COG</span>
+              <span class="filter-count">{{ moisdCount }}</span>
+            </button>
+            <button @click="handleFilterClick(toggleSupplierFilter)" :class="{ active: isSupplierFilterActive }" title="SUPPLIER">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M12,2a1,1,0,0,0-1,1V4.28A5.5,5.5,0,0,0,7.5,7.5,1,1,0,0,0,9,8.4V10H6v2H9v1H5v2H9v1H7v2h2.53A5.49,5.49,0,0,0,12,19.72a5.5,5.5,0,0,0,5.5-5.5,1,1,0,0,0-1.5-.83A3.49,3.49,0,0,1,12,17.72,3.5,3.5,0,0,1,8.5,14.22V13h8V11H13V10h3V8H13V8.4A5.5,5.5,0,0,0,12,2Z"
+                />
+              </svg>
+              <span class="button-text">SUPPLIER</span>
+              <span class="filter-count">{{ supplierCount }}</span>
+            </button>
+
+            <div class="sidebar-heading">
+              <hr />
+            </div>
+
+            <button @click="handleFilterClick(toggleDoneFilter)" :class="{ active: isDoneFilterActive }" title="DONE">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12,2A10,10,0,1,0,22,12,10,10,0,0,0,12,2Zm5.71,8.71L12.5,15.92a1,1,0,0,1-1.42,0L7.29,12.13a1,1,0,0,1,1.42-1.42L12,13.09l4.29-4.3a1,1,0,0,1,1.42,1.42Z" />
+              </svg>
+              <span class="button-text">DONE</span>
+              <span class="filter-count">{{ doneCount }}</span>
+            </button>
+
+              <button onclick="window.location.href='https://script.google.com/a/macros/megaworld-lifestyle.com/s/AKfycby5AbvascrYcoGWqqIdsF4i6N8HI5UGMFIcJC_KmtaiYmfl3BvmXHCrCc4VL8qdBw4H/exec'" title="Redirect">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M10 9V5l-7 7 7 7v-4.1c5 0 8.5 1.6 11 5.1-1-5-4-10-11-11z" />
+              </svg>
+              <span class="button-text">MSP Contract Library</span>
+            </button>
+            
+            <button @click="handleFilterClick(toggleRejectedFilter)" :class="{ active: isRejectedFilterActive }" title="REJECTED">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12,2a10,10,0,1,0,10,10A10,10,0,0,0,12,2Zm3.71,12.29a1,1,0,0,1-1.42,1.42L12,13.41l-2.29,2.3a1,1,0,0,1-1.42-1.42L10.59,12l-2.3-2.29a1,1,0,0,1,1.42-1.42L12,10.59l2.29-2.3a1,1,0,1,1,1.42,1.42L13.41,12Z" />
+              </svg>
+              <span class="button-text">REJECTED</span>
+              <span class="filter-count">{{ rejectedCount }}</span>
+            </button>
+
+          
+          </nav>
+
+          <div class="sidebar-footer">
+            <button @click="handleLogout" class="logout-button">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18px" height="18px">
+                <path d="M5,5H12V3H5A2,2,0,0,0,3,5V19a2,2,0,0,0,2,2H12V19H5V5m14,4-4-4V7H9v2h6v2l4-4Z" />
+              </svg>
+              Logout
+            </button>
+          </div>
+        </aside>
+        <main id="main-content">
+          <header class="app-header">
+            <button class="hamburger-menu" @click="toggleSidebar" aria-label="Open menu">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3,6H21V8H3V6M3,11H21V13H3V11M3,16H21V18H3V16Z" />
+              </svg>
+            </button>
+            <h1 class="main-header">MSP Contracts Workflow</h1>
+            <div class="user-profile">
+              <div class="greeting">{{ greeting }}</div>
+              <div class="username">{{ loggedInUserName }}</div>
+            </div>
+            <button @click="toggleTheme" class="theme-toggle-button" aria-label="Toggle theme">
+              <svg v-if="currentTheme === 'light'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M12,9a3,3,0,1,0,3,3A3,3,0,0,0,12,9Zm0-5a1,1,0,0,0-1,1v2a1,1,0,0,0,2,0V5A1,1,0,0,0,12,4ZM20,11H18a1,1,0,0,0,0,2h2a1,1,0,0,0,0-2ZM6,11H4a1,1,0,0,0,0,2H6a1,1,0,0,0,0-2Zm12.71-.29a1,1,0,0,0-1.42,0l-1.41,1.41a1,1,0,0,0,1.41,1.42l1.42-1.41A1,1,0,0,0,18.71,10.71ZM6.71,17.29a1,1,0,0,0,0-1.41L5.29,14.46a1,1,0,0,0-1.41,1.41l1.41,1.42A1,1,0,0,0,6.71,17.29ZM12,20a1,1,0,0,0,1-1V17a1,1,0,0,0-2,0v2A1,1,0,0,0,12,20ZM7.29,5.29a1,1,0,0,0-1.41,0L4.46,6.71a1,1,0,0,0,1.41,1.41L7.29,6.71A1,1,0,0,0,7.29,5.29Zm11.12,11.12a1,1,0,0,0,1.42,0l1.41-1.42a1,1,0,0,0-1.41-1.41l-1.42,1.41A1,1,0,0,0,18.41,16.41Z"
+                />
+              </svg>
+              <svg v-if="currentTheme === 'afternoon'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M19.3,16.29a1,1,0,0,0-1.42,1.42l1.42,1.41a1,1,0,0,0,1.41-1.41ZM12,20a1,1,0,0,0,1-1V17a1,1,0,0,0-2,0v2A1,1,0,0,0,12,20ZM4.71,17.71a1,1,0,0,0,1.41,1.42l1.42-1.42a1,1,0,0,0-1.42-1.41ZM20,11H4a1,1,0,0,0,0,2H20a1,1,0,0,0,0-2Z M12,4A6,6,0,0,0,6.33,8.2a1,1,0,0,0,1.94.49A4,4,0,0,1,12,6a4.12,4.12,0,0,1,4,4,1,1,0,0,0,2,0A6,6,0,0,0,12,4Z"
+                />
+              </svg>
+              <svg v-if="currentTheme === 'dark'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12,2A10,10,0,1,0,22,12,10,10,0,0,0,12,2ZM13,19.93A8,8,0,0,1,13,4.07,7.82,7.82,0,0,1,19.93,11,8,8,0,0,1,13,19.93Z" />
+              </svg>
+            </button>
+          </header>
+
+          <div class="search-container">
+            <span class="search-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20px" height="20px">
+                <path d="M10,18a8,8,0,1,1,8-8A8,8,0,0,1,10,18ZM10,4a6,6,0,1,0,6,6A6,6,0,0,0,10,4Z" />
+                <path d="M21,21a1,1,0,0,1-.71-.29l-4-4a1,1,0,0,1,1.42-1.42l4,4a1,1,0,0,1,0,1.42A1,1,0,0,1,21,21Z" />
+              </svg>
+            </span>
+            <input type="text" id="search-term" v-model.trim="searchTerm" placeholder="Search by NOA Ref #, MSP Contract Ref #, etc..." />
+          </div>
+
+          <div v-if="showPropertyNote" class="direction-note"><strong>NOTE:</strong> You can submit a file by scrolling to the far right of the table and clicking the upload button.</div>
+
+          <div v-if="loading" class="content-card">
+            <div class="loader-container">
+              <div class="loader"></div>
+              <span>Loading Data...</span>
+            </div>
+          </div>
+          <div v-if="error" class="content-card">
+            <div class="message"><span>{{ error }}</span></div>
+          </div>
+
+          <div v-if="!loading && !error" class="content-card">
+            <div v-if="filteredData.length > 0" class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th v-for="header in visibleHeaders" :key="header" :class="getColumnClass(header)">{{ header }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(row, rowIndex) in paginatedData" :key="rowIndex">
+                    <td v-for="header in visibleHeaders" :key="header" :class="getColumnClass(header)">
+                      <template v-if="header === 'Submit Contract signed by GM/CGM'">
+                        <button class="upload-btn" @click="triggerFileUpload(row)" title="Submit File">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18px" height="18px">
+                            <path d="M9,16V10H5L12,3L19,10H15V16H9M5,20V18H19V20H5Z" />
+                          </svg>
+                        </button>
+                      </template>
+                      <template v-else-if="isUrl(row[header])"><a :href="row[header]" target="_blank" rel="noopener noreferrer">View Link</a></template>
+                      <template v-else>{{ row[header] }}</template>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <nav v-if="totalPages > 1 && filteredData.length > 0" class="pagination">
+              <span>Page <b>{{ currentPage }}</b> of <b>{{ totalPages }}</b></span>
+              <div class="pagination-controls">
+                <button @click="currentPage--" :disabled="currentPage === 1">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20px" height="20px">
+                    <path d="M15.41,16.59L10.83,12l4.58-4.59L14,6l-6,6l6,6Z" />
+                  </svg>
+                  Previous
+                </button>
+                <button @click="currentPage++" :disabled="currentPage === totalPages">
+                  Next
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20px" height="20px">
+                    <path d="M8.59,16.59L13.17,12,8.59,7.41,10,6l6,6-6,6Z" />
+                  </svg>
+                </button>
+              </div>
+            </nav>
+            <div v-if="filteredData.length === 0 && !loading" class="message">
+              <span>{{ noResultsMessage }}</span>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script>
+      // Vue.js Script remains unchanged
+      const { createApp, ref, computed, watch, onMounted } = Vue;
+
+      const app = createApp({
+        setup() {
+          const loading = ref(false),
+            error = ref(null),
+            allData = ref([]),
+            searchTerm = ref(""),
+            currentPage = ref(1),
+            pageSize = ref(10),
+            isSidebarOpen = ref(false),
+            activeRefForUpload = ref(null),
+            visibleHeaders = ref([]),
+            showPropertyNote = ref(false),
+            isLoggedIn = ref(false),
+            isLoggingIn = ref(false),
+            loginUsername = ref(""),
+            loginPassword = ref(""),
+            loginError = ref(null),
+            loggedInUserName = ref(""),
+            userProperties = ref([]),
+            greeting = ref(""),
+            currentTheme = ref("light"),
+            isDefaultFilterActive = ref(true),
+            isRbgTkFilterActive = ref(false),
+            isNoDraftFilterActive = ref(false),
+            isWithDraftFilterActive = ref(false),
+            isPropertyFilterActive = ref(false),
+            isMoisdFilterActive = ref(false),
+            isSupplierFilterActive = ref(false),
+            isDoneFilterActive = ref(false),
+            isRejectedFilterActive = ref(false),
+            showLogoutModal = ref(false),
+            dataRefreshTimer = ref(null);
+
+          const columnConfigs = {
+            default: [],
+            rbgTk: [
+              "NOA Release Timestamp",
+              "NOA Released by",
+              "PROPERTY",
+              "PAYOR COMPANY",
+              "MSP COMPANY NAME",
+              "SERVICE TYPE",
+              "PRF NO",
+              "START DATE",
+              "END DATE",
+              "KIND OF NOA",
+              "Copy of Released NOA",
+              "Adtl Identifier",
+              "SECTOR",
+              "Additional Mailing List of PROC",
+              "NEW or REVISED",
+              "Re-uploaded NOA Ref#",
+              "Ref# of Main/ Mother Contract",
+              "Age/ Turn- Around Time",
+              "RBG-TK Response Timestamp",
+              "RBG-TK User",
+              "NOA REF#",
+              "Copy of RBG-TK Validated NOA",
+              "Reason for Disapproval",
+              "Email Status",
+              "Copy of RBG-TK Validated NOA",
+              "Jaye Received email (test default recipient of RBG-TK and PROC)",
+            ],
+            noDraft: [
+              "Ref#",
+              "Township or Property or Group",
+              "Ball with",
+              "Days pending with",
+              "Date Received Request",
+              "Kind of Contract",
+              "NOA Ref#",
+              "MSP Contract Ref#",
+              "Date Drafted/ Rejected",
+              "Date emailed to GM",
+              "Date Routed to MOSD-COG  Reviewers",
+              "Date Informed Agency  to Pick-up",
+              "Date Return of Notarized Copy",
+              "Service Provider",
+              "Payor Company",
+              "Type of Service",
+              "Section",
+              "Start Date",
+              "End Date",
+            ],
+            withDraft: [
+              "Ref#",
+              "Township or Property or Group",
+              "Ball with",
+              "Days pending with",
+              "Date Received Request",
+              "Kind of Contract",
+              "NOA Ref#",
+              "MSP Contract Ref#",
+              "Date Drafted/ Rejected",
+              "Date emailed to GM ",
+              "Date Routed to COG-SCSU Reviewers",
+              "Date Informed Agency  to Pick-up",
+              "Date Return of Notarized Copy",
+              "Township or Property or Group",
+              "Service Provider",
+              "Payor Company",
+              "Type of Service",
+              "Section",
+              "Start Date",
+              "End Date",
+            ],
+            property: [
+              "Ref#",
+              "Township or Property or Group",
+              "Ball with",
+              "Days pending with",
+              "Date Received Request",
+              "Kind of Contract",
+              "NOA Ref#",
+              "MSP Contract Ref#",
+              "Date Drafted/ Rejected",
+              "Date emailed to GM ",
+              "Date Routed to COG-SCSU Reviewers",
+              "Date Informed Agency  to Pick-up",
+              "Date Return of Notarized Copy",
+              "Township or Property or Group",
+              "Service Provider",
+              "Payor Company",
+              "Type of Service",
+              "Section",
+              "Start Date",
+              "End Date",
+              "Submit Contract signed by GM/CGM",
+            ],
+            moisd: [
+              "Ref#",
+              "Township or Property or Group",
+              "Ball with",
+              "Days pending with",
+              "Date Received Request",
+              "Kind of Contract",
+              "NOA Ref#",
+              "MSP Contract Ref#",
+              "Date Drafted/ Rejected",
+              "Date emailed to GM ",
+              "Date Routed to COG-SCSU Reviewers",
+              "Date Informed Agency  to Pick-up",
+              "Date Return of Notarized Copy",
+              "Township or Property or Group",
+              "Service Provider",
+              "Payor Company",
+              "Type of Service",
+              "Section",
+              "Start Date",
+              "End Date",
+            ],
+            supplier: [
+              "Ref#",
+              "Township or Property or Group",
+              "Ball with",
+              "Days pending with",
+              "Date Received Request",
+              "Kind of Contract",
+              "NOA Ref#",
+              "MSP Contract Ref#",
+              "Date Drafted/ Rejected",
+              "Date emailed to GM ",
+              "Date Routed to COG-SCSU Reviewers",
+              "Date Informed Agency  to Pick-up",
+              "Date Return of Notarized Copy",
+              "Township or Property or Group",
+              "Service Provider",
+              "Payor Company",
+              "Type of Service",
+              "Section",
+              "Start Date",
+              "End Date",
+            ],
+            done: [
+              "Ref#",
+              "Township or Property or Group",
+              "Ball with",
+              "Days pending with",
+              "Date Received Request",
+              "Kind of Contract",
+              "NOA Ref#",
+              "MSP Contract Ref#",
+              "Date Drafted/ Rejected",
+              "Date emailed to GM ",
+              "Date Routed to COG-SCSU Reviewers",
+              "Date Informed Agency  to Pick-up",
+              "Date Return of Notarized Copy",
+              "Township or Property or Group",
+              "Service Provider",
+              "Payor Company",
+              "Type of Service",
+              "Section",
+              "Start Date",
+              "End Date",
+            ],
+            rejected: [
+              "Ref#",
+              "Township or Property or Group",
+              "Ball with",
+              "Days pending with",
+              "Date Received Request",
+              "Kind of Contract",
+              "NOA Ref#",
+              "MSP Contract Ref#",
+              "Date Drafted/ Rejected",
+              "Date emailed to GM ",
+              "Date Routed to COG-SCSU Reviewers",
+              "Date Informed Agency  to Pick-up",
+              "Date Return of Notarized Copy",
+              "Township or Property or Group",
+              "Service Provider",
+              "Payor Company",
+              "Type of Service",
+              "Section",
+              "Start Date",
+              "End Date",
+            ],
+          };
+          const columnClassMap = {
+            "Ref#": "col-ref",
+            "Township or Property or Group": "col-township",
+            "Ball with": "col-ball-with",
+            "Days pending with": "col-days-pending",
+            "NOA REF#": "col-noa-ref",
+            "Date Received Request": "col-date",
+            "MSP Contract Ref#": "col-msp-ref",
+            // Add any other columns you want to control here
+          };
+
+          // 2. Create a helper function to get the correct class for a header.
+          const getColumnClass = (header) => {
+            // It looks up the header in our map and returns it if found.
+            return columnClassMap[header] || "";
+          };
+
+          const setGreetingAndTheme = () => {
+            const h = new Date().getHours();
+            if (h >= 5 && h < 12) {
+              greeting.value = "Good Morning";
+              currentTheme.value = "light";
+            } else if (h >= 12 && h < 18) {
+              greeting.value = "Good Afternoon";
+              currentTheme.value = "afternoon";
+            } else {
+              greeting.value = "Good Evening";
+              currentTheme.value = "dark";
+            }
+          };
+          const toggleTheme = () => {
+            const t = ["light", "afternoon", "dark"];
+            currentTheme.value = t[(t.indexOf(currentTheme.value) + 1) % t.length];
+          };
+          watch(currentTheme, (t) => {
+            document.documentElement.setAttribute("data-theme", t);
+          });
+          const handleLogin = () => {
+            isLoggingIn.value = true;
+            loginError.value = null;
+            google.script.run
+              .withSuccessHandler((a) => {
+                if (a.status === "success") {
+                  loggedInUserName.value = a.name;
+                  userProperties.value = a.properties;
+                  google.script.run
+                    .withSuccessHandler((d) => {
+                      isLoggingIn.value = false;
+                      if (d.error) {
+                        loginError.value = d.error;
+                      } else {
+                        allData.value = d.allRows;
+                        columnConfigs.default = d.headers;
+                        visibleHeaders.value = d.headers;
+                        isLoggedIn.value = true;
+                        loginPassword.value = "";
+                        dataRefreshTimer.value = setInterval(refreshData, 12e5);
+                      }
+                    })
+                    .withFailureHandler((e) => {
+                      isLoggingIn.value = false;
+                      loginError.value = "Failed to load dashboard data. " + e.message;
+                    })
+                    .getInitialData({
+                      properties: userProperties.value,
+                    });
+                } else {
+                  isLoggingIn.value = false;
+                  loginError.value = a.message;
+                }
+              })
+              .withFailureHandler(() => {
+                isLoggingIn.value = false;
+                loginError.value = "An error occurred during login.";
+              })
+              .authenticateUser(loginUsername.value, loginPassword.value);
+          };
+          const refreshData = () => {
+            showToast("Refreshing data...", "info", 3e3);
+            google.script.run
+              .withSuccessHandler((d) => {
+                if (d.error) {
+                  showToast(`Failed to refresh data: ${d.error}`, "error", 5e3);
+                } else {
+                  allData.value = d.allRows;
+                  showToast("Data updated successfully.", "success");
+                }
+              })
+              .withFailureHandler((e) => {
+                showToast(`Failed to refresh data: ${e.message}`, "error", 5e3);
+              })
+              .getInitialData({
+                properties: userProperties.value,
+              });
+          };
+          const handleLogout = () => {
+            showLogoutModal.value = true;
+          };
+          const confirmLogout = () => {
+            if (dataRefreshTimer.value) {
+              clearInterval(dataRefreshTimer.value);
+              dataRefreshTimer.value = null;
+            }
+            isLoggedIn.value = false;
+            loggedInUserName.value = "";
+            userProperties.value = [];
+            loginUsername.value = "";
+            allData.value = [];
+            error.value = null;
+            setDefaultView();
+            showLogoutModal.value = false;
+          };
+          const cancelLogout = () => {
+            showLogoutModal.value = false;
+          };
+          const toggleSidebar = () => {
+            isSidebarOpen.value = !isSidebarOpen.value;
+            document.body.classList.toggle("sidebar-open", isSidebarOpen.value);
+          };
+          const handleFilterClick = (f) => {
+            f();
+            if (window.innerWidth < 1024) toggleSidebar();
+          };
+          const showToast = (m, t = "info", d = 4e3) => {
+            const c = document.getElementById("toast-container");
+            if (!c) return;
+            const e = document.createElement("div");
+            e.className = `app-toast ${t}`;
+            e.textContent = m;
+            c.appendChild(e);
+            if (d > 0)
+              setTimeout(() => {
+                if (e.parentNode) c.removeChild(e);
+              }, d);
+            return e;
+          };
+          const triggerFileUpload = (r) => {
+            if (!r || !r["Ref#"]) {
+              showToast("Cannot upload: Ref# is missing.", "error");
+              return;
+            }
+            activeRefForUpload.value = r["Ref#"];
+            document.getElementById("file-uploader").click();
+          };
+          const handleFileUpload = (e) => {
+            const f = e.target.files[0];
+            e.target.value = "";
+            if (!f) return;
+            if (f.type !== "application/pdf") {
+              showToast("Invalid file type. Please upload a PDF.", "error");
+              return;
+            }
+            if (f.size > 10 * 1024 * 1024) {
+              showToast("File is too large. Maximum size is 10MB.", "error");
+              return;
+            }
+            const r = new FileReader();
+            r.readAsDataURL(f);
+            r.onload = () => {
+              const t = showToast(`Uploading "${f.name}"...`, "info", 0),
+                d = r.result.split(",")[1];
+              google.script.run
+                .withSuccessHandler((res) => {
+                  if (t?.parentNode) t.parentNode.removeChild(t);
+                  showToast(res.message, res.status === "success" ? "success" : "error");
+                })
+                .withFailureHandler((err) => {
+                  if (t?.parentNode) t.parentNode.removeChild(t);
+                  showToast(`An error occurred: ${err.message}`, "error", 6e3);
+                })
+                .uploadFileAndLogData({
+                  ref: activeRefForUpload.value,
+                  fileName: f.name,
+                  base64Data: d,
+                  userName: loggedInUserName.value,
+                });
+            };
+            r.onerror = () => showToast("Could not read file.", "error");
+          };
+          const isUrl = (t) => String(t || "").trim().startsWith("http");
+          const isValidDate = (d) => {
+            // Rule 1: Return false if the value is null, undefined, or an empty string.
+            if (!d) {
+              return false;
+            }
+            // Rule 2: Specifically exclude the hyphen character, trimming any whitespace.
+            if (String(d).trim() === "-") {
+              return false;
+            }
+            // Rule 3: Attempt to create a Date object. If it's an invalid date (e.g., from text like "N/A"),
+            // its time value will be NaN (Not a Number). We check for that.
+            return !isNaN(new Date(d).getTime());
+          };
+
+          const filteredData = computed(() => {
+            let d = allData.value;
+
+            // This condition filters the data to only include records where the 'source' is "RBG-TK".
+            if (isRbgTkFilterActive.value) d = d.filter((r) => r.source === "RBG-TK");
+            // This condition filters for records from "COG-SCSU" that are considered "no draft" because they lack a "Ref#" and have a "Date emailed to GM".
+            else if (isNoDraftFilterActive.value) d = d.filter((r) => r.source === "COG-SCSU" && !r["Ref#"] && r["Date Received Request"]);
+            // This condition filters for records from "COG-SCSU" that are considered "with draft" based on several criteria.
+            else if (isWithDraftFilterActive.value)
+              d = d.filter((r) => {
+                // It first ensures the record's source is "COG-SCSU".
+                if (r.source !== "COG-SCSU") return false;
+
+                const ref = String(r["Ref#"] || "").trim();
+                const bW = String(r["Ball with"] || "").trim();
+
+                return (
+                  // The record is included if the "Ref#" contains "combined" and "Ball with" is a period.
+                  (ref.toLowerCase().includes("combined") && bW === ".") ||
+                  // Or if there is a "Ref#" and the "Ball with" is "COG-SCSU".
+                  (ref !== "" && bW === "COG-SCSU") ||
+                  // Or if "Ball with" is "Redo".
+                  bW === "Redo" ||
+                  // Or if "Ball with" is "For Sending to Prop".
+                  bW === "For Sending to Prop" ||
+                  // UPDATED CONDITION: Use the helper to check for a valid date.
+                  isValidDate(r["Date Return of Notarized Copy"])
+                );
+              });
+            // This condition filters for records from "COG-SCSU" where the "Ball with" status is "PROPERTY".
+            else if (isPropertyFilterActive.value) d = d.filter((r) => r.source === "COG-SCSU" && String(r["Ball with"] || "").trim() === "PROPERTY");
+            // This condition filters for records from "COG-SCSU" where the "Ball with" status is "MOSD".
+            else if (isMoisdFilterActive.value) d = d.filter((r) => r.source === "COG-SCSU" && String(r["Ball with"] || "").trim() === "MOSD");
+            // This condition filters for records from "COG-SCSU" where the "Ball with" status is either "SUPPLIER" or "For Pick-up of Sup".
+            else if (isSupplierFilterActive.value) d = d.filter((r) => r.source === "COG-SCSU" && ["SUPPLIER", "For Pick-up of Sup"].includes(String(r["Ball with"] || "").trim()));
+            // This condition filters for records from "COG-SCSU" where the "Ball with" status is "done".
+            else if (isDoneFilterActive.value)
+              d = d.filter(
+                (r) =>
+                  r.source === "COG-SCSU" &&
+                  String(r["Ball with"] || "")
+                    .trim()
+                    .toLowerCase() === "done"
+              );
+            // This condition filters for records from "COG-SCSU" where the "Ref#" contains the word "rejected".
+            else if (isRejectedFilterActive.value)
+              d = d.filter(
+                (r) =>
+                  r.source === "COG-SCSU" &&
+                  String(r["Ref#"] || "")
+                    .toLowerCase()
+                    .includes("rejected")
+              );
+            // If no other specific filter is active, this condition defaults to showing all records from "COG-SCSU".
+            else d = d.filter((r) => r.source === "COG-SCSU");
+
+            // This condition checks if there is an active search term.
+            if (searchTerm.value) {
+              const s = searchTerm.value.toLowerCase();
+              // It then filters the already-filtered data 'd' further.
+              // It keeps only the records where at least one of the visible columns contains the search term.
+              return d.filter((r) =>
+                visibleHeaders.value.some((h) =>
+                  String(r[h] || "")
+                    .toLowerCase()
+                    .includes(s)
+                )
+              );
+            }
+
+            // If no search term is entered, it returns the data as filtered by the active category filter.
+            return d;
+          });
+          const allContractsCount = computed(() => allData.value.filter((r) => r.source === "COG-SCSU").length),
+            rbgTkCount = computed(() => allData.value.filter((r) => r.source === "RBG-TK").length),
+            noDraftCount = computed(() => allData.value.filter((r) => r.source === "COG-SCSU" && !r["Ref#"] && r["Date Received Request"]).length),
+            withDraftCount = computed(
+              () =>
+                allData.value.filter((r) => {
+                  if (r.source !== "COG-SCSU") return !1;
+                  const f = String(r["Ref#"] || "").trim(),
+                    t = String(r["Ball with"] || "").trim();
+                  return (f.toLowerCase().includes("combined") && t === ".") || (f !== "" && t === "COG-SCSU") || t === "Redo" || t === "For Sending to Prop";
+                }).length
+            ),
+            propertyCount = computed(() => allData.value.filter((r) => r.source === "COG-SCSU" && String(r["Ball with"] || "").trim() === "PROPERTY").length),
+            moisdCount = computed(() => allData.value.filter((r) => r.source === "COG-SCSU" && String(r["Ball with"] || "").trim() === "MOSD").length),
+            supplierCount = computed(() => allData.value.filter((r) => r.source === "COG-SCSU" && ["SUPPLIER", "For Pick-up of Sup"].includes(String(r["Ball with"] || "").trim())).length),
+            doneCount = computed(
+              () =>
+                allData.value.filter(
+                  (r) =>
+                    r.source === "COG-SCSU" &&
+                    String(r["Ball with"] || "")
+                      .trim()
+                      .toLowerCase() === "done"
+                ).length
+            ),
+            rejectedCount = computed(
+              () =>
+                allData.value.filter(
+                  (r) =>
+                    r.source === "COG-SCSU" &&
+                    String(r["Ref#"] || "")
+                      .toLowerCase()
+                      .includes("rejected")
+                ).length
+            );
+          const totalPages = computed(() => Math.ceil(filteredData.value.length / pageSize.value));
+          const paginatedData = computed(() => {
+            const s = (currentPage.value - 1) * pageSize.value;
+            return filteredData.value.slice(s, s + pageSize.value);
+          });
+          watch(filteredData, () => {
+            currentPage.value = 1;
+          });
+          const deactivateAllFilters = () => {
+            [isDefaultFilterActive, isRbgTkFilterActive, isNoDraftFilterActive, isWithDraftFilterActive, isPropertyFilterActive, isMoisdFilterActive, isSupplierFilterActive, isDoneFilterActive, isRejectedFilterActive].forEach(
+              (f) => (f.value = false)
+            );
+            showPropertyNote.value = false;
+          };
+          const createToggleFilter = (f, c) => () => {
+            deactivateAllFilters();
+            f.value = true;
+            visibleHeaders.value = columnConfigs[c];
+            searchTerm.value = "";
+          };
+
+          // This new computed property generates the dynamic "no results" message.
+          const noResultsMessage = computed(() => {
+            // First, determine the name of the active filter category.
+            let activeFilterName = "contracts";
+            if (isRbgTkFilterActive.value) activeFilterName = "RBG-TK contracts to display, try to look in other tabs.";
+            else if (isNoDraftFilterActive.value) activeFilterName = "COG-SCSU - NO DRAFT contracts to display, try to look in RBG-TK tab";
+            else if (isWithDraftFilterActive.value) activeFilterName = "COG-SCSU - WITH DRAFT contracts to display, try to look in RBG-TK tab";
+            else if (isPropertyFilterActive.value) activeFilterName = "contracts in PROPERTY to display, try to look in RBG-TK tab";
+            else if (isMoisdFilterActive.value) activeFilterName = "contracts in MOSD - COG to display, try to look in RBG-TK tab";
+            else if (isSupplierFilterActive.value) activeFilterName = "contracts in SUPPLIER to display, try to look in RBG-TK tab";
+            else if (isDoneFilterActive.value) activeFilterName = "DONE contracts to display, try to look in RBG-TK tab";
+            else if (isRejectedFilterActive.value) activeFilterName = "REJECTED contracts to display, try to look in RBG-TK tab";
+            else if (isDefaultFilterActive.value) activeFilterName = "All Contracts to display, try to look in RBG-TK tab";
+
+            // Now, check if the user is searching for something.
+            if (searchTerm.value) {
+              // If they are, return a message specific to their search.
+              return `No ${activeFilterName} found matching your search.`;
+            } else {
+              // If they aren't searching, it means the category itself is empty.
+              return `There are currently no ${activeFilterName} `;
+            }
+          });
+
+          watch(filteredData, () => {
+            currentPage.value = 1;
+          });
+
+          const setDefaultView = createToggleFilter(isDefaultFilterActive, "default");
+          const toggleRbgTkFilter = createToggleFilter(isRbgTkFilterActive, "rbgTk");
+          const toggleNoDraftFilter = createToggleFilter(isNoDraftFilterActive, "noDraft");
+          const toggleWithDraftFilter = createToggleFilter(isWithDraftFilterActive, "withDraft");
+          const togglePropertyFilter = () => {
+            createToggleFilter(isPropertyFilterActive, "property")();
+            showPropertyNote.value = true;
+          };
+          const toggleMoisdFilter = createToggleFilter(isMoisdFilterActive, "moisd");
+          const toggleSupplierFilter = createToggleFilter(isSupplierFilterActive, "supplier");
+          const toggleDoneFilter = createToggleFilter(isDoneFilterActive, "done");
+          const toggleRejectedFilter = createToggleFilter(isRejectedFilterActive, "rejected");
+          onMounted(setGreetingAndTheme);
+          return {
+            loading,
+            error,
+            visibleHeaders,
+            searchTerm,
+            currentPage,
+            totalPages,
+            paginatedData,
+            filteredData,
+            isUrl,
+            toggleSidebar,
+            handleFilterClick,
+            isDefaultFilterActive,
+            setDefaultView,
+            isRbgTkFilterActive,
+            toggleRbgTkFilter,
+            isNoDraftFilterActive,
+            toggleNoDraftFilter,
+            isWithDraftFilterActive,
+            toggleWithDraftFilter,
+            isPropertyFilterActive,
+            togglePropertyFilter,
+            isMoisdFilterActive,
+            toggleMoisdFilter,
+            isSupplierFilterActive,
+            toggleSupplierFilter,
+            isDoneFilterActive,
+            toggleDoneFilter,
+            isRejectedFilterActive,
+            toggleRejectedFilter,
+            triggerFileUpload,
+            handleFileUpload,
+            isLoggedIn,
+            isLoggingIn,
+            loginUsername,
+            loginPassword,
+            loginError,
+            loggedInUserName,
+            handleLogin,
+            handleLogout,
+            greeting,
+            currentTheme,
+            toggleTheme,
+            showLogoutModal,
+            confirmLogout,
+            cancelLogout,
+            allContractsCount,
+            rbgTkCount,
+            noDraftCount,
+            withDraftCount,
+            propertyCount,
+            moisdCount,
+            supplierCount,
+            doneCount,
+            rejectedCount,
+            showPropertyNote,
+            noResultsMessage,
+            getColumnClass,
+          };
+        },
+      }).mount("#app");
+    </script>
+  </body>
+</html>
